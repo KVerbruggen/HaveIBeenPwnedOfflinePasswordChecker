@@ -20,20 +20,31 @@ namespace PasswordChecker.controls
     /// </summary>
     public partial class PasswordControl : UserControl
     {
+        #region event handlers
         public delegate void ButtonClickHandler(object sender, RoutedEventArgs e);
         public event ButtonClickHandler RemovePasswordClick;
 
-        public ResultBox linkedResultBox;
+        #endregion
 
-        public string Text {
+        #region properties
+
+        public ResultBox LinkedResultBox { get; set; }
+
+        public string Password {
             get { return textbox.Text; }
             set { textbox.Text = value; }
         }
+
+        #endregion
+
+        #region constructors
 
         public PasswordControl()
         {
             InitializeComponent();
         }
+
+        #endregion
 
         #region events
 

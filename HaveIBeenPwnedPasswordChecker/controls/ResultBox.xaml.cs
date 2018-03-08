@@ -117,7 +117,7 @@ namespace PasswordChecker.controls
 
         #region methods
 
-        public void StartSeeking(string hash)
+        public void StartedSeeking(string hash)
         {
             Hash = hash;
             this.state = ResultBoxState.Seeking;

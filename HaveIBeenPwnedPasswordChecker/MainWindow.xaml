@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PasswordChecker"
         xmlns:custom="clr-namespace:PasswordChecker.controls"
         mc:Ignorable="d"
-        Title="Has my password been pwned?" Height="400" Width="610" ResizeMode="NoResize">
+        Title="Has my password been pwned?" Height="600" Width="800" ResizeMode="NoResize">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -25,14 +25,14 @@
         </WrapPanel>
         <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Column="1">
             <Label>File:</Label>
-            <Label x:Name="lbl_filepath" Content="{Binding Filepath}" />
+            <Label x:Name="lbl_filepath" Content="{Binding ElementName=_this, Path=Filepath}" />
             <Button x:Name="btFilepath" Margin="10, 5" Click="btFilepath_Click">Choose filepath</Button>
         </WrapPanel>
         <Label Grid.Row="1" Margin="10,0,10,0" Width="Auto" HorizontalAlignment="Left" Padding="0" VerticalContentAlignment="Center">Passwords:</Label>
         <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10, 0, 10, 0">
             <ScrollViewer x:Name="svPasswords" HorizontalAlignment="Stretch" Padding="5" ScrollChanged="ScrollViewer_ScrollChanged">
                 <StackPanel x:Name="passwords" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True">
-                    <custom:PasswordControl RemovePasswordClick="RemovePassword_Click" />
+                    <custom:PasswordControl x:Name="defaultPasswordControl" RemovePasswordClick="RemovePassword_Click" />
                     <Button x:Name="btAddPassword" Width="30" Height="30" HorizontalAlignment="Left" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="24" Margin="10,5,0,0" Padding="0 -4 0 0" Click="btAddPassword_Click">+</Button>
                 </StackPanel>
             </ScrollViewer>
@@ -42,7 +42,7 @@
         <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10, 0, 10, 0">
             <ScrollViewer x:Name="svHashes" HorizontalAlignment="Stretch" Padding="5 5 5 5" ScrollChanged="ScrollViewer_ScrollChanged">
                 <StackPanel x:Name="results" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True">
-                    <custom:ResultBox HorizontalAlignment="Stretch" Height="32" />
+                    <custom:ResultBox x:Name="defaultResultBox" HorizontalAlignment="Stretch" Height="32" />
                     <Label HorizontalAlignment="Stretch" Height="35" Margin="0" Padding="0" />
                 </StackPanel>
             </ScrollViewer>

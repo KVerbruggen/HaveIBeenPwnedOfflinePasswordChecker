@@ -24,14 +24,15 @@ namespace PasswordChecker
     {
         private string filepath = String.Empty;
 
-        private string Filepath {
+        public string Filepath {
             get { return String.IsNullOrEmpty(filepath) ? "[..]" : filepath; }
-            set { filepath = value; }
+            private set { filepath = value; }
         }
 
         public MainWindow()
         {
             InitializeComponent();
+            defaultPasswordControl.LinkedResultBox = defaultResultBox;
         }
 
         #region events
@@ -42,9 +43,9 @@ namespace PasswordChecker
             newPassword.RemovePasswordClick += RemovePassword_Click;
             // TODO - generate hash
             ResultBox newResultBox = new ResultBox();
-            newPassword.linkedResultBox = newResultBox;
-            passwords.Children.Insert(passwords.Children.Count - 2, newPassword);
-            results.Children.Insert(results.Children.Count - 2, newResultBox);
+            newPassword.LinkedResultBox = newResultBox;
+            passwords.Children.Insert(passwords.Children.Count - 1, newPassword);
+            results.Children.Insert(results.Children.Count - 1, newResultBox);
         }
 
         private void RemovePassword_Click(object sender, RoutedEventArgs e)
@@ -52,9 +53,9 @@ namespace PasswordChecker
             PasswordControl pwc_sender = (sender as PasswordControl);
             if (passwords.Children.Count > 2)
             {
-                if (pwc_sender.linkedResultBox != null)
+                if (pwc_sender.LinkedResultBox != null)
                 {
-                    results.Children.Remove(pwc_sender.linkedResultBox);
+                    results.Children.Remove(pwc_sender.LinkedResultBox);
                 }
                 passwords.Children.Remove(pwc_sender);
             }
@@ -63,6 +64,7 @@ namespace PasswordChecker
         private void btFilepath_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
             if (openFileDialog.ShowDialog() == true)
             {
                 this.filepath = openFileDialog.FileName;
@@ -71,7 +73,15 @@ namespace PasswordChecker
 
         private void btCheck_Click(object sender, RoutedEventArgs e)
         {
-            // TODO
+            foreach(Control c in passwords.Children)
+            {
+                if (c is PasswordControl)
+                {
+                    PasswordControl pwc = (c as PasswordControl);
+                    string hash = PWC.Hash(pwc.Password);
+                    pwc.LinkedResultBox.StartedSeeking(hash);
+                }
+            } 
         }
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
