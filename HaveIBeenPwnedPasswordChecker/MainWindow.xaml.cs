@@ -25,7 +25,7 @@ namespace PasswordChecker
         private string filepath = String.Empty;
 
         public string Filepath {
-            get { return String.IsNullOrEmpty(filepath) ? "[..]" : filepath; }
+            get { return String.IsNullOrEmpty(filepath) ? "[None]" : filepath; }
             private set { filepath = value; }
         }
 
@@ -67,8 +67,9 @@ namespace PasswordChecker
             openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
             if (openFileDialog.ShowDialog() == true)
             {
-                this.filepath = openFileDialog.FileName;
+                this.Filepath = openFileDialog.FileName;
             }
+            txt_filepath.Text= Filepath;
         }
 
         private void btCheck_Click(object sender, RoutedEventArgs e)
