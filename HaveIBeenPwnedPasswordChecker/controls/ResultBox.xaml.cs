@@ -54,7 +54,8 @@ namespace PasswordChecker.controls
         private ResultBoxState State
         {
             get { return state; }
-            set {
+            set
+            {
                 state = value;
                 switch (value)
                 {
@@ -88,7 +89,8 @@ namespace PasswordChecker.controls
 
         public int Count
         {
-            set {
+            set
+            {
                 count = value;
                 if (count > 0)
                 {
@@ -113,6 +115,8 @@ namespace PasswordChecker.controls
 
         #endregion
 
+        #region methods
+
         public void StartSeeking(string hash)
         {
             Hash = hash;
@@ -124,5 +128,8 @@ namespace PasswordChecker.controls
             this.Count = count;
             State = ResultBoxState.DoneSeeking;
         }
+
+        #endregion
+
     }
 }
