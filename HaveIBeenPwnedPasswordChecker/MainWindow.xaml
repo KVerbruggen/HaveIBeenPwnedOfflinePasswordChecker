@@ -5,7 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PasswordChecker"
-        xmlns:custom="clr-namespace:PasswordChecker.controls"
+        xmlns:controls="clr-namespace:PasswordChecker.controls"
         mc:Ignorable="d"
         Title="Has my password been pwned?" Height="600" Width="800" ResizeMode="NoResize">
     <Grid>
@@ -21,8 +21,8 @@
         </Grid.RowDefinitions>
         <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Left">
             <Label Margin="10,0,0,0">Filetype:</Label>
-            <RadioButton Content="Ordered by hash"  Margin="5, 0" VerticalAlignment="Center" />
-            <RadioButton Content="Ordered by count" Margin="5, 0" VerticalAlignment="Center" />
+            <RadioButton x:Name="rbOrderByHash" Content="Ordered by hash"  Margin="5, 0" VerticalAlignment="Center" Checked="setSearchType_OrderByHash" />
+            <RadioButton x:Name="rbOrderByCount" Content="Ordered by count" Margin="5, 0" VerticalAlignment="Center" Checked="setSearchType_OrderByCount" IsChecked="True" />
         </WrapPanel>
         <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Column="1">
             <Label VerticalAlignment="Center">File:</Label>
@@ -33,17 +33,17 @@
         <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10, 0, 10, 0">
             <ScrollViewer x:Name="svPasswords" HorizontalAlignment="Stretch" Padding="5" ScrollChanged="ScrollViewer_ScrollChanged">
                 <StackPanel x:Name="passwords" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True">
-                    <custom:PasswordControl x:Name="defaultPasswordControl" RemovePasswordClick="RemovePassword_Click" />
+                    <controls:PasswordControl x:Name="defaultPasswordControl" RemovePasswordClick="RemovePassword_Click" />
                     <Button x:Name="btAddPassword" Width="30" Height="30" HorizontalAlignment="Left" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="24" Margin="10,5,0,0" Padding="0 -4 0 0" Click="btAddPassword_Click">+</Button>
                 </StackPanel>
             </ScrollViewer>
         </Border>
-        <Button x:Name="btCheck" Click="btCheck_Click" Grid.Row="3" Width="120" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10">Check passwords</Button>
+        <Button x:Name="btCheck" Click="btCheck_Click" Grid.Row="3" Width="Auto" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Padding="10, 0">Check passwords</Button>
         <Label Grid.Column="1" Grid.Row="1" Margin="10,0">Hashes:</Label>
         <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10, 0, 10, 0">
             <ScrollViewer x:Name="svHashes" HorizontalAlignment="Stretch" Padding="5 5 5 5" ScrollChanged="ScrollViewer_ScrollChanged">
                 <StackPanel x:Name="results" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True">
-                    <custom:ResultBox x:Name="defaultResultBox" HorizontalAlignment="Stretch" Height="32" />
+                    <controls:ResultBox x:Name="defaultResultBox" HorizontalAlignment="Stretch" Height="32" />
                     <Label HorizontalAlignment="Stretch" Height="35" Margin="0" Padding="0" />
                 </StackPanel>
             </ScrollViewer>

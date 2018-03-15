@@ -22,7 +22,7 @@ namespace PasswordChecker.controls
     {
         #region enums
 
-        private enum ResultBoxState
+        public enum ResultBoxState
         {
             NotStarted,
             Seeking,
@@ -47,11 +47,10 @@ namespace PasswordChecker.controls
             set
             {
                 hash = value;
-                txtHash.Content = value;
             }
         }
 
-        private ResultBoxState State
+        public ResultBoxState State
         {
             get { return state; }
             set
@@ -62,12 +61,10 @@ namespace PasswordChecker.controls
                     case ResultBoxState.NotStarted:
                         txtCount.Foreground = new SolidColorBrush(Colors.Black);
                         txtCount.Visibility = Visibility.Hidden;
-                        txtDivider.Visibility = Visibility.Hidden;
                         break;
                     case ResultBoxState.Seeking:
                         txtCount.Foreground = new SolidColorBrush(Colors.Black);
                         txtCount.Visibility = Visibility.Hidden;
-                        txtDivider.Visibility = Visibility.Visible;
                         animLoading.Visibility = Visibility.Visible;
                         break;
                     case ResultBoxState.DoneSeeking:
@@ -80,7 +77,6 @@ namespace PasswordChecker.controls
                             txtCount.Foreground = new SolidColorBrush(Colors.DarkGreen);
                         }
                         txtCount.Visibility = Visibility.Visible;
-                        txtDivider.Visibility = Visibility.Visible;
                         animLoading.Visibility = Visibility.Hidden;
                         break;
                 }
@@ -120,7 +116,7 @@ namespace PasswordChecker.controls
         public void StartedSeeking(string hash)
         {
             Hash = hash;
-            this.state = ResultBoxState.Seeking;
+            State = ResultBoxState.Seeking;
         }
 
         public void DoneSeeking(int count)

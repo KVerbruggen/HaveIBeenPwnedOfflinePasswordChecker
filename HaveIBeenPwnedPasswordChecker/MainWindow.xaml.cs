@@ -22,11 +22,10 @@ namespace PasswordChecker
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string filepath = String.Empty;
 
-        public string Filepath {
-            get { return String.IsNullOrEmpty(filepath) ? "[None]" : filepath; }
-            private set { filepath = value; }
+        private string Filepath {
+            get { return String.IsNullOrEmpty(PWC.Filepath) ? "[None]" : PWC.Filepath; }
+            set { PWC.Filepath = value; }
         }
 
         public MainWindow()
@@ -34,6 +33,17 @@ namespace PasswordChecker
             InitializeComponent();
             defaultPasswordControl.LinkedResultBox = defaultResultBox;
         }
+
+        #region methods
+
+        public void DisableSettingsControls()
+        {
+            rbOrderByHash.IsEnabled = false;
+            rbOrderByCount.IsEnabled = false;
+            btFilepath.IsEnabled = false;
+        }
+
+        #endregion
 
         #region events
 
@@ -67,22 +77,34 @@ namespace PasswordChecker
             openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
             if (openFileDialog.ShowDialog() == true)
             {
-                this.Filepath = openFileDialog.FileName;
+                Filepath = openFileDialog.FileName;
             }
-            txt_filepath.Text= Filepath;
+            txt_filepath.Text = Filepath;
         }
 
         private void btCheck_Click(object sender, RoutedEventArgs e)
         {
+            DisableSettingsControls();
+            if (sender is Button)
+            {
+                (sender as Button).Content = "Add passwords to check";
+            }
+
+            Queue<string> hashes = new Queue<string>();
             foreach(Control c in passwords.Children)
             {
                 if (c is PasswordControl)
                 {
                     PasswordControl pwc = (c as PasswordControl);
-                    string hash = PWC.Hash(pwc.Password);
-                    pwc.LinkedResultBox.StartedSeeking(hash);
+                    if (pwc.LinkedResultBox.State != ResultBox.ResultBoxState.DoneSeeking)
+                    {
+                        string hash = PWC.Hash(pwc.Password);
+                        hashes.Enqueue(hash);
+                        pwc.LinkedResultBox.StartedSeeking(hash);
+                        PWC.CreateSearchInFile(hash, pwc);
+                    }
                 }
-            } 
+            }
         }
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -100,7 +122,16 @@ namespace PasswordChecker
             }
         }
 
-        #endregion
+        private void setSearchType_OrderByHash(object sender, RoutedEventArgs e)
+        {
+            PWC.SearchType = SearchType.OrderedByHash;
+        }
 
+        private void setSearchType_OrderByCount(object sender, RoutedEventArgs e)
+        {
+            PWC.SearchType = SearchType.OrderedByCount;
+        }
+
+        #endregion
     }
 }
