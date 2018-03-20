@@ -76,6 +76,7 @@ namespace PasswordChecker.controls
                 {
                     Edited = false;
                 }
+                this.Dispatcher.Invoke(() => this.IsEnabled = (e.SearchState != SearchState.Seeking));
             }
         }
 
