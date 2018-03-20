@@ -67,6 +67,7 @@ namespace PasswordChecker.controls
 
         private void SearchStarted()
         {
+            txtResult.Content = search.Hash;
             txtCount.Foreground = new SolidColorBrush(Colors.Black);
             txtCount.Visibility = Visibility.Hidden;
             animLoading.Visibility = Visibility.Visible;
