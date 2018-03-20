@@ -17,6 +17,16 @@ namespace PasswordChecker
 
     public static class PWC
     {
+        private static object threadLock = new object();
+
+        private static CancellationTokenSource cts;
+
+        public static MainWindow MainWindow
+        {
+            private get;
+            set;
+        }
+
         private static List<SearchThread> runningSearches = new List<SearchThread>();
 
         public static string Filepath { get; set; }
@@ -40,22 +50,50 @@ namespace PasswordChecker
             }
         }
 
+        private static void RemoveSearch(SearchThread searchThread)
+        {
+            lock (threadLock)
+            {
+                runningSearches.Remove(searchThread);
+                if (runningSearches.Count < 1)
+                {
+                    MainWindow.Dispatcher.Invoke(() => MainWindow.AllSearchesFinished());
+                }
+            }
+        }
+
         public static void CreateSearchInFile(string inputhash, controls.PasswordControl pwc)
         {
+            if (runningSearches.Count < 1)
+            {
+                cts = new CancellationTokenSource();
+            }
             SearchParameters searchParameters = new SearchParameters {
                 Hash = inputhash,
                 LinkedPasswordControl = pwc
             };
 
-            CancellationTokenSource cts = new CancellationTokenSource();
+            CancellationTokenSource localCts = new CancellationTokenSource();
 
-            Task<int> seekHashTask = Task.Run(() => SeekHashInFile(searchParameters.Hash, cts));
-            runningSearches.Add(new SearchThread(seekHashTask, searchParameters));
-            seekHashTask.ContinueWith((task) => {
+            CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, localCts.Token);
+            Task<int> seekHashTask = Task.Run(() => SeekHashInFile(searchParameters.Hash, linkedCts));
+            SearchThread searchThread = new SearchThread(seekHashTask, searchParameters);
+            lock (threadLock)
+            {
+                runningSearches.Add(searchThread);
+            }
+            seekHashTask.ContinueWith((task) =>
+            {
+                RemoveSearch(searchThread);
                 searchParameters.LinkedResultBox.Dispatcher.Invoke(() => searchParameters.LinkedResultBox.DoneSeeking(task.Result));
             });
 
             return;
+        }
+
+        public static void StopSeeking()
+        {
+            cts.Cancel();
         }
 
         private static async Task<int> SeekHashInFile(string hashToFind, CancellationTokenSource cts)
@@ -78,7 +116,7 @@ namespace PasswordChecker
                         case SearchType.OrderedByCount:
                             while (((byteRead = (char)stream.ReadByte()) != -1) && !cts.Token.IsCancellationRequested)
                             {
-                                if ((int)byteRead != -1)
+                                if ((int)byteRead != 65535)
                                 {
                                     switch (byteRead)
                                     {
@@ -128,6 +166,10 @@ namespace PasswordChecker
                             break;
                     }
                 });
+            }
+            lock (threadLock)
+            {
+
             }
             return foundCount;
         }

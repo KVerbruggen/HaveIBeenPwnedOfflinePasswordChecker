@@ -47,6 +47,7 @@ namespace PasswordChecker.controls
             set
             {
                 hash = value;
+                txtResult.Content = hash;
             }
         }
 

@@ -28,8 +28,10 @@ namespace PasswordChecker
             set { PWC.Filepath = value; }
         }
 
+
         public MainWindow()
         {
+            PWC.MainWindow = this;
             InitializeComponent();
             defaultPasswordControl.LinkedResultBox = defaultResultBox;
         }
@@ -41,6 +43,34 @@ namespace PasswordChecker
             rbOrderByHash.IsEnabled = false;
             rbOrderByCount.IsEnabled = false;
             btFilepath.IsEnabled = false;
+            btStop.IsEnabled = true;
+        }
+
+        public void EnableSettingsControls()
+        {
+            rbOrderByHash.IsEnabled = true;
+            rbOrderByCount.IsEnabled = true;
+            btFilepath.IsEnabled = true;
+            btStop.IsEnabled = false;
+            btCheck.Content = "Check passwords";
+        }
+
+        public bool SetFilepath()
+        {
+            bool b = false;
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            if (b = (openFileDialog.ShowDialog() == true))
+            {
+                Filepath = openFileDialog.FileName;
+            }
+            txt_filepath.Text = Filepath;
+            return b;
+        }
+
+        public void AllSearchesFinished()
+        {
+            EnableSettingsControls();
         }
 
         #endregion
@@ -73,17 +103,19 @@ namespace PasswordChecker
 
         private void btFilepath_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-            if (openFileDialog.ShowDialog() == true)
-            {
-                Filepath = openFileDialog.FileName;
-            }
-            txt_filepath.Text = Filepath;
+            SetFilepath();
         }
 
         private void btCheck_Click(object sender, RoutedEventArgs e)
         {
+            if (String.IsNullOrEmpty(PWC.Filepath))
+            {
+                MessageBox.Show("Please point to the database file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!SetFilepath())
+                {
+                    return;
+                }
+            }
             DisableSettingsControls();
             if (sender is Button)
             {
@@ -96,7 +128,7 @@ namespace PasswordChecker
                 if (c is PasswordControl)
                 {
                     PasswordControl pwc = (c as PasswordControl);
-                    if (pwc.LinkedResultBox.State != ResultBox.ResultBoxState.DoneSeeking)
+                    if (pwc.LinkedResultBox.State != ResultBox.ResultBoxState.Seeking)
                     {
                         string hash = PWC.Hash(pwc.Password);
                         hashes.Enqueue(hash);
@@ -132,6 +164,12 @@ namespace PasswordChecker
             PWC.SearchType = SearchType.OrderedByCount;
         }
 
+        private void btStop_Click(object sender, RoutedEventArgs e)
+        {
+            PWC.StopSeeking();
+        }
+
         #endregion
+
     }
 }
