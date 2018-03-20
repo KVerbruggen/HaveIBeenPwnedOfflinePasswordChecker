@@ -31,7 +31,6 @@ namespace PasswordChecker
 
         public MainWindow()
         {
-            PWC.MainWindow = this;
             PWC.AllSearchesFinished += this.AllSearchesFinished;
             InitializeComponent();
             AddPassword();
