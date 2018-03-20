@@ -33,7 +33,6 @@
         <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10, 0, 10, 0">
             <ScrollViewer x:Name="svPasswords" HorizontalAlignment="Stretch" Padding="5" ScrollChanged="ScrollViewer_ScrollChanged">
                 <StackPanel x:Name="passwords" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True">
-                    <controls:PasswordControl x:Name="defaultPasswordControl" RemovePasswordClick="RemovePassword_Click" />
                     <Button x:Name="btAddPassword" Width="30" Height="30" HorizontalAlignment="Left" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="24" Margin="10,5,0,0" Padding="0 -4 0 0" Click="btAddPassword_Click">+</Button>
                 </StackPanel>
             </ScrollViewer>
@@ -44,7 +43,6 @@
         <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10, 0, 10, 0">
             <ScrollViewer x:Name="svHashes" HorizontalAlignment="Stretch" Padding="5 5 5 5" ScrollChanged="ScrollViewer_ScrollChanged">
                 <StackPanel x:Name="results" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="True">
-                    <controls:ResultBox x:Name="defaultResultBox" HorizontalAlignment="Stretch" Height="32" />
                     <Label HorizontalAlignment="Stretch" Height="35" Margin="0" Padding="0" />
                 </StackPanel>
             </ScrollViewer>

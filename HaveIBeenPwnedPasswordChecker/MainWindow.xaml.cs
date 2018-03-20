@@ -32,8 +32,9 @@ namespace PasswordChecker
         public MainWindow()
         {
             PWC.MainWindow = this;
+            PWC.AllSearchesFinished += this.AllSearchesFinished;
             InitializeComponent();
-            defaultPasswordControl.LinkedResultBox = defaultResultBox;
+            AddPassword();
         }
 
         #region methods
@@ -55,37 +56,43 @@ namespace PasswordChecker
             btCheck.Content = "Check passwords";
         }
 
-        public bool SetFilepath()
+        public void SetFilepath()
         {
-            bool b = false;
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-            if (b = (openFileDialog.ShowDialog() == true))
+            if (openFileDialog.ShowDialog() == true)
             {
                 Filepath = openFileDialog.FileName;
             }
             txt_filepath.Text = Filepath;
-            return b;
         }
 
-        public void AllSearchesFinished()
+        public void AddPassword()
         {
-            EnableSettingsControls();
+            Search newSearch = new Search();
+
+            PasswordControl newPasswordControl = new PasswordControl(newSearch);
+            newPasswordControl.RemovePasswordClick += RemovePassword_Click;
+
+            ResultBox newResultBox = new ResultBox(newSearch);
+            newPasswordControl.LinkedResultBox = newResultBox;
+
+            passwords.Children.Insert(passwords.Children.Count - 1, newPasswordControl);
+            results.Children.Insert(results.Children.Count - 1, newResultBox);
         }
 
         #endregion
 
         #region events
 
+        public void AllSearchesFinished(object sender, EventArgs e)
+        {
+            this.Dispatcher.Invoke(() => EnableSettingsControls());
+        }
+
         private void btAddPassword_Click(object sender, RoutedEventArgs e)
         {
-            PasswordControl newPassword = new PasswordControl();
-            newPassword.RemovePasswordClick += RemovePassword_Click;
-            // TODO - generate hash
-            ResultBox newResultBox = new ResultBox();
-            newPassword.LinkedResultBox = newResultBox;
-            passwords.Children.Insert(passwords.Children.Count - 1, newPassword);
-            results.Children.Insert(results.Children.Count - 1, newResultBox);
+            AddPassword();
         }
 
         private void RemovePassword_Click(object sender, RoutedEventArgs e)
@@ -110,11 +117,8 @@ namespace PasswordChecker
         {
             if (String.IsNullOrEmpty(PWC.Filepath))
             {
-                MessageBox.Show("Please point to the database file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                if (!SetFilepath())
-                {
-                    return;
-                }
+                MessageBox.Show("No file selected. Please select a passwordhash database and indicate whether it is ordered by count or by hash.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
             DisableSettingsControls();
             if (sender is Button)
@@ -128,11 +132,11 @@ namespace PasswordChecker
                 if (c is PasswordControl)
                 {
                     PasswordControl pwc = (c as PasswordControl);
-                    if (pwc.LinkedResultBox.State != ResultBox.ResultBoxState.Seeking)
+                    if (!pwc.Search.IsLocked && pwc.Edited)
                     {
                         string hash = PWC.Hash(pwc.Password);
                         hashes.Enqueue(hash);
-                        pwc.LinkedResultBox.StartedSeeking(hash);
+                        pwc.Search.StartedSeeking(hash);
                         PWC.CreateSearchInFile(hash, pwc);
                     }
                 }
@@ -171,5 +175,15 @@ namespace PasswordChecker
 
         #endregion
 
+        private void cbHidePasswords_Checked(object sender, RoutedEventArgs e)
+        {
+            foreach (Control c in passwords.Children)
+            {
+                if (c is PasswordControl)
+                {
+                    PasswordControl pwc = (c as PasswordControl);
+                }
+            }
+        }
     }
 }

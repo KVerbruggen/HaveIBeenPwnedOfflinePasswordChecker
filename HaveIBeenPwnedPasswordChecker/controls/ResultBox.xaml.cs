@@ -20,78 +20,27 @@ namespace PasswordChecker.controls
     /// </summary>
     public partial class ResultBox : UserControl
     {
-        #region enums
-
-        public enum ResultBoxState
-        {
-            NotStarted,
-            Seeking,
-            DoneSeeking
-        }
-
-        #endregion
 
         #region fields
 
-        private string hash;
-        private int count = 0;
-        private ResultBoxState state = ResultBoxState.NotStarted;
+        private Search search;
 
         #endregion
 
         #region properties
 
-        private string Hash
-        {
-            get { return hash; }
-            set
-            {
-                hash = value;
-                txtResult.Content = hash;
-            }
-        }
-
-        public ResultBoxState State
-        {
-            get { return state; }
-            set
-            {
-                state = value;
-                switch (value)
-                {
-                    case ResultBoxState.NotStarted:
-                        txtCount.Foreground = new SolidColorBrush(Colors.Black);
-                        txtCount.Visibility = Visibility.Hidden;
-                        break;
-                    case ResultBoxState.Seeking:
-                        txtCount.Foreground = new SolidColorBrush(Colors.Black);
-                        txtCount.Visibility = Visibility.Hidden;
-                        animLoading.Visibility = Visibility.Visible;
-                        break;
-                    case ResultBoxState.DoneSeeking:
-                        if (count > 0)
-                        {
-                            txtCount.Foreground = new SolidColorBrush(Colors.DarkRed);
-                        }
-                        else
-                        {
-                            txtCount.Foreground = new SolidColorBrush(Colors.DarkGreen);
-                        }
-                        txtCount.Visibility = Visibility.Visible;
-                        animLoading.Visibility = Visibility.Hidden;
-                        break;
-                }
-            }
-        }
-
         public int Count
         {
             set
             {
-                count = value;
-                if (count > 0)
+                search.Count = value;
+                if (search.Count > 0)
                 {
-                    txtCount.Content = count + " times found";
+                    txtCount.Content = search.Count + " times found";
+                }
+                else if (search.Count < 0)
+                {
+                    txtCount.Content = "Cancelled";
                 }
                 else
                 {
@@ -104,26 +53,84 @@ namespace PasswordChecker.controls
 
         #region constructors
 
-        public ResultBox()
+        public ResultBox(Search search)
         {
+            this.search = search;
+            search.StateChanged += search_StateChanged;
+
             InitializeComponent();
-            Hash = String.Empty;
         }
 
         #endregion
 
         #region methods
 
-        public void StartedSeeking(string hash)
+        private void SearchStarted()
         {
-            Hash = hash;
-            State = ResultBoxState.Seeking;
+            txtCount.Foreground = new SolidColorBrush(Colors.Black);
+            txtCount.Visibility = Visibility.Hidden;
+            animLoading.Visibility = Visibility.Visible;
         }
 
-        public void DoneSeeking(int count)
+        private void SearchFinished()
         {
-            this.Count = count;
-            State = ResultBoxState.DoneSeeking;
+            if (search.Count > 0)
+            {
+                txtCount.Foreground = new SolidColorBrush(Colors.DarkRed);
+                txtCount.Content = search.Count + " times found";
+            }
+            else if (search.Count < 0)
+            {
+                SearchCancelled();
+            }
+            else
+            {
+                txtCount.Foreground = new SolidColorBrush(Colors.DarkGreen);
+                txtCount.Content = "Hash not found";
+            }
+            txtCount.Visibility = Visibility.Visible;
+            animLoading.Visibility = Visibility.Hidden;
+        }
+
+        private void SearchCancelled()
+        {
+            txtCount.Foreground = new SolidColorBrush(Colors.Orange);
+            txtCount.Visibility = Visibility.Visible;
+            Count = -1;
+            animLoading.Visibility = Visibility.Hidden;
+        }
+
+        private void ResetCount()
+        {
+            txtCount.Foreground = new SolidColorBrush(Colors.Black);
+            txtCount.Visibility = Visibility.Hidden;
+        }
+
+        #endregion
+
+        #region events
+
+        private void search_StateChanged(object sender, SearchStateEventArgs e)
+        {
+            if (sender is Search)
+            {
+                Search search = (sender as Search);
+                switch (e.SearchState)
+                {
+                    case SearchState.NotStarted:
+                        this.Dispatcher.Invoke(() => ResetCount());
+                        break;
+                    case SearchState.Seeking:
+                        this.Dispatcher.Invoke(() => SearchStarted());
+                        break;
+                    case SearchState.DoneSeeking:
+                        this.Dispatcher.Invoke(() => SearchFinished());
+                        break;
+                    case SearchState.Cancelled:
+                        this.Dispatcher.Invoke(() => SearchCancelled());
+                        break;
+                }
+            }
         }
 
         #endregion
