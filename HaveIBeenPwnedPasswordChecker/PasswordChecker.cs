@@ -46,6 +46,15 @@ namespace PasswordChecker
 
         #endregion
 
+        #region constructors
+
+        static PWC()
+        {
+            // AllSearchesFinished += CollectGarbage;
+        }
+
+        #endregion
+
         #region methods
 
         public static string Hash(string input)
@@ -114,16 +123,16 @@ namespace PasswordChecker
 
         private static async Task<int> SeekHashInFile(string hashToFind, CancellationTokenSource cts)
         {
-            bool foundHash = false;
-            int foundCount = -1;
-            using (FileStream stream = File.Open(@Filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            return await Task<int>.Run(() =>
             {
-                await Task.Run(async () =>
+                int foundCount = -1;
+
+                using (FileStream stream = File.Open(@Filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
                     char byteRead;
 
-                    string currentHash = String.Empty;
-                    string currentHashCountString = String.Empty;
+                    StringBuilder HashBuilder = new StringBuilder();
+                    StringBuilder CountBuilder = new StringBuilder();
                     // phase 0 = read hash; phase 1 = read count
                     int phase = 0;
 
@@ -138,19 +147,20 @@ namespace PasswordChecker
                                     {
                                         if (phase == 1)
                                         {
-                                            Task<(bool found, int count)> t = Task.Run(() => CompareHashes(currentHash, hashToFind, currentHashCountString));
-                                            await t.ContinueWith((taskCompareHashes) =>
+                                        string currentHash = HashBuilder.ToString();
+                                        string currentCount = CountBuilder.ToString();
+                                            Task.Run(() => CompareHashes(currentHash, hashToFind, currentCount))
+                                            .ContinueWith((taskCompare) =>
                                             {
-                                                if (taskCompareHashes.Result.found)
+                                                if (taskCompare.Result != -1)
                                                 {
                                                     cts.Cancel();
-                                                    foundHash = true;
-                                                    foundCount = taskCompareHashes.Result.count;
+                                                    foundCount = taskCompare.Result;
                                                 }
                                                 return;
                                             });
-                                            currentHash = String.Empty;
-                                            currentHashCountString = String.Empty;
+                                            HashBuilder.Clear();
+                                            CountBuilder.Clear();
                                             phase = 0;
                                         }
                                     }
@@ -162,11 +172,11 @@ namespace PasswordChecker
                                     {
                                         if (phase == 0)
                                         {
-                                            currentHash += byteRead;
+                                            HashBuilder.Append(byteRead);
                                         }
                                         else
                                         {
-                                            currentHashCountString += byteRead;
+                                            CountBuilder.Append(byteRead);
                                         }
                                     }
                                 }
@@ -174,18 +184,28 @@ namespace PasswordChecker
                                 {
                                     if (phase == 1)
                                     {
-
-                                        Task<(bool found, int count)> t = Task.Run(() => CompareHashes(currentHash, hashToFind, currentHashCountString));
-                                        int i = await t.ContinueWith((taskCompareHashes) =>
+                                        string currentHash = HashBuilder.ToString();
+                                        string currentCount = CountBuilder.ToString();
+                                        Task.Run(() => CompareHashes(currentHash, hashToFind, currentCount))
+                                        .ContinueWith((taskCompare) =>
                                         {
-                                            if (taskCompareHashes.Result.found)
+                                            if (taskCompare.Result != -1)
                                             {
                                                 cts.Cancel();
-                                                foundHash = true;
-                                                foundCount = taskCompareHashes.Result.count;
+                                                foundCount = taskCompare.Result;
                                             }
-                                            return taskCompareHashes.Result.count;
+                                            else
+                                            {
+                                                cts.Cancel();
+                                                foundCount = 0;
+                                            }
+                                            return;
                                         });
+                                    }
+                                    else
+                                    {
+                                        cts.Cancel();
+                                        return 0;
                                     }
                                 }
                             }
@@ -194,17 +214,35 @@ namespace PasswordChecker
                             // TODO
                             break;
                     }
-                });
-            }
-            return foundCount;
+                }
+                return foundCount;
+            }, cts.Token);
         }
 
-        private static (bool, int) CompareHashes(string hashFromFile, string hashToFind, string countString)
+        private static int CompareHashes(string hashFromFile, string hashToFind, string countString)
         {
             int count = 0;
-            Int32.TryParse(countString, out count);
-            return (hashFromFile.Equals(hashToFind), count);
+            if (hashFromFile.Equals(hashToFind))
+            {
+                Int32.TryParse(countString, out count);
+                return count;
+            }
+            else
+            {
+                return -1;
+            }
         }
+
+        #endregion
+
+        #region events
+
+        private static void CollectGarbage(object sender, EventArgs e)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
 
         #endregion
 
