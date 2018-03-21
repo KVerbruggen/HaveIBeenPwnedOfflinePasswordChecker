@@ -82,6 +82,9 @@ namespace PasswordChecker
             passwords.Children.Insert(passwords.Children.Count - 1, newPasswordControl);
             results.Children.Insert(results.Children.Count - 1, newResultBox);
 
+            svPasswords.ScrollToBottom();
+            svHashes.ScrollToBottom();
+
             return newPasswordControl;
         }
 
@@ -168,7 +171,7 @@ namespace PasswordChecker
                         string hash = PWC.Hash(pwc.Password);
                         hashes.Enqueue(hash);
                         pwc.Search.StartedSeeking(hash);
-                        PWC.CreateSearchInFile(hash, pwc);
+                        PWC.CreateSearchInFile(hash, pwc.Search);
                     }
                 }
             }

@@ -99,13 +99,12 @@ namespace PasswordChecker
             }
         }
 
-        public static void CreateSearchInFile(string inputhash, controls.PasswordControl pwc)
+        public static void CreateSearchInFile(string inputhash, Search search)
         {
             if (runningSearches.Count < 1)
             {
                 ctsAllSearches = new CancellationTokenSource();
             }
-            Search search = pwc.Search;
 
             CancellationTokenSource localCts = new CancellationTokenSource();
 
@@ -120,11 +119,11 @@ namespace PasswordChecker
                 RemoveSearch(search);
                 if (task.Result < 0)
                 {
-                    pwc.Search.Cancelled();
+                    search.Cancelled();
                 }
                 else
                 {
-                    pwc.Search.DoneSeeking(task.Result);
+                    search.DoneSeeking(task.Result);
                 }
             });
 
