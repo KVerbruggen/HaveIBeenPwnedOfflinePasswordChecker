@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.IO;
 using System.Threading;
+using System.Collections.Concurrent;
 
 namespace PasswordChecker
 {
@@ -39,7 +40,7 @@ namespace PasswordChecker
 
         #region properties
 
-        private static List<Search> runningSearches = new List<Search>();
+        private static List<Password> runningSearches = new List<Password>();
 
         public static string Filepath { get; set; }
 
@@ -75,55 +76,54 @@ namespace PasswordChecker
             }
         }
 
-        private static void AddSearch(Search search)
+        private static void AddPassword(Password password)
         {
             lock (threadLock)
             {
                 if (runningSearches.Count == 0)
                 {
-                    SearchStarted?.Invoke(search, new EventArgs());
+                    SearchStarted?.Invoke(password, new EventArgs());
                 }
             }
-            runningSearches.Add(search);
+            runningSearches.Add(password);
         }
 
-        private static void RemoveSearch(Search search)
+        private static void RemoveSearch(Password password)
         {
-            runningSearches.Remove(search);
+            runningSearches.Remove(password);
             lock (threadLock)
             {
                 if (runningSearches.Count < 1)
                 {
-                    AllSearchesFinished?.Invoke(search, new EventArgs());
+                    ctsAllSearches.Cancel();
+                    AllSearchesFinished?.Invoke(password, new EventArgs());
                 }
             }
         }
 
-        public static void CreateSearchInFile(string inputhash, Search search)
+        public static void CreateSearchesInFile(List<Password> passwords)
         {
             if (runningSearches.Count < 1)
             {
                 ctsAllSearches = new CancellationTokenSource();
             }
 
-            CancellationTokenSource localCts = new CancellationTokenSource();
-
-            CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ctsAllSearches.Token, localCts.Token);
-
-            Task<int> seekHashTask = Task.Run(() => SeekHashInFile(search.Hash, linkedCts));
-
-            AddSearch(search);
+            foreach(Password password in passwords)
+            {
+                password.StartedSeeking();
+                AddPassword(password);
+            }
+            Task seekHashTask = Task.Run(() => SeekHashesInFile(passwords, ctsAllSearches));
 
             seekHashTask.ContinueWith((task) =>
             {
-                RemoveSearch(search);
-                if (task.Result < 0)
+                foreach (Password password in passwords)
                 {
-                    search.Cancelled();
-                }
-                else
-                {
-                    search.DoneSeeking(task.Result);
+                    RemoveSearch(password);
+                    if (password.State == SearchState.Seeking)
+                    {
+                        password.Cancelled();
+                    }
                 }
             });
 
@@ -135,16 +135,17 @@ namespace PasswordChecker
             ctsAllSearches.Cancel();
         }
 
-        private static async Task<int> SeekHashInFile(string hashToFind, CancellationTokenSource cts)
+        private static async Task SeekHashesInFile(List<Password> passwordsToFind, CancellationTokenSource cts)
         {
-            return await Task<int>.Run(() =>
+            await Task.Run(() =>
             {
-                int foundCount = -1;
-
+                
                 using (FileStream stream = File.Open(@Filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    char byteRead;
+                    ReaderWriterLockSlim passwordsLock = new ReaderWriterLockSlim();
+                    Password[] allPasswords = passwordsToFind.ToArray();
 
+                    char byteRead;
                     StringBuilder HashBuilder = new StringBuilder();
                     StringBuilder CountBuilder = new StringBuilder();
                     // phase 0 = read hash; phase 1 = read count
@@ -161,18 +162,30 @@ namespace PasswordChecker
                                     {
                                         if (phase == 1)
                                         {
-                                        string currentHash = HashBuilder.ToString();
-                                        string currentCount = CountBuilder.ToString();
-                                            Task.Run(() => CompareHashes(currentHash, hashToFind, currentCount))
-                                            .ContinueWith((taskCompare) =>
+                                            string currentHash = HashBuilder.ToString();
+                                            string currentCount = CountBuilder.ToString();
+
+                                            passwordsLock.EnterReadLock();
+                                            Password[] passwordsCurrentLoop = passwordsToFind.ToArray();
+                                            passwordsLock.ExitReadLock();
+
+                                            foreach (Password password in passwordsCurrentLoop)
                                             {
-                                                if (taskCompare.Result != -1)
+                                                Task.Run(() => CompareHashes(currentHash, password.Hash, currentCount))
+                                                .ContinueWith((taskCompare) =>
                                                 {
-                                                    cts.Cancel();
-                                                    foundCount = taskCompare.Result;
-                                                }
-                                                return;
-                                            });
+                                                    if (taskCompare.Result != -1)
+                                                    {
+                                                        passwordsLock.EnterWriteLock();
+                                                        passwordsToFind.Remove(password);
+                                                        passwordsLock.ExitWriteLock();
+                                                        RemoveSearch(password);
+                                                        password.DoneSeeking(taskCompare.Result);
+                                                    }
+                                                    return;
+                                                });
+                                            }
+                                            
                                             HashBuilder.Clear();
                                             CountBuilder.Clear();
                                             phase = 0;
@@ -200,26 +213,32 @@ namespace PasswordChecker
                                     {
                                         string currentHash = HashBuilder.ToString();
                                         string currentCount = CountBuilder.ToString();
-                                        Task.Run(() => CompareHashes(currentHash, hashToFind, currentCount))
-                                        .ContinueWith((taskCompare) =>
+
+                                        passwordsLock.EnterReadLock();
+                                        foreach (Password password in passwordsToFind)
                                         {
-                                            if (taskCompare.Result != -1)
+                                            passwordsLock.ExitReadLock();
+                                            Task.Run(() => CompareHashes(currentHash, password.Hash, currentCount))
+                                            .ContinueWith((taskCompare) =>
                                             {
-                                                cts.Cancel();
-                                                foundCount = taskCompare.Result;
-                                            }
-                                            else
-                                            {
-                                                cts.Cancel();
-                                                foundCount = 0;
-                                            }
-                                            return;
-                                        });
+                                                if (taskCompare.Result != -1)
+                                                {
+                                                    passwordsLock.EnterWriteLock();
+                                                    passwordsToFind.Remove(password);
+                                                    passwordsLock.ExitWriteLock();
+                                                    RemoveSearch(password);
+                                                    password.DoneSeeking(taskCompare.Result);
+                                                }
+                                                return;
+                                            });
+                                            passwordsLock.EnterReadLock();
+                                        }
+                                        passwordsLock.ExitReadLock();
                                     }
                                     else
                                     {
                                         cts.Cancel();
-                                        return 0;
+                                        return;
                                     }
                                 }
                             }
@@ -229,7 +248,7 @@ namespace PasswordChecker
                             break;
                     }
                 }
-                return foundCount;
+                return;
             }, cts.Token);
         }
 

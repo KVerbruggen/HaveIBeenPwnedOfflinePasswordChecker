@@ -32,10 +32,10 @@ namespace PasswordChecker.controls
 
         #region properties
 
-        public Search Search { get; private set; }
+        public Password Password { get; private set; }
         public ResultBox LinkedResultBox { get; set; }
 
-        public string Password
+        public string PasswordString
         {
             get { return passwordbox.Password; }
         }
@@ -49,10 +49,10 @@ namespace PasswordChecker.controls
 
         #region constructors
 
-        public PasswordControl(Search search)
+        public PasswordControl(Password password)
         {
-            Search = search;
-            search.StateChanged += search_StateChanged;
+            Password = password;
+            password.StateChanged += password_StateChanged;
 
             InitializeComponent();
         }
@@ -71,11 +71,11 @@ namespace PasswordChecker.controls
             Edited = true;
         }
 
-        private void search_StateChanged(object sender, SearchStateEventArgs e)
+        private void password_StateChanged(object sender, PasswordStateEventArgs e)
         {
-            if (sender is Search)
+            if (sender is Password)
             {
-                Search search = (sender as Search);
+                Password password = (sender as Password);
                 if (e.SearchState == SearchState.DoneSeeking)
                 {
                     Edited = false;

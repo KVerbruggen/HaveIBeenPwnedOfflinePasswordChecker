@@ -70,7 +70,7 @@ namespace PasswordChecker
 
         public PasswordControl AddPassword()
         {
-            Search newSearch = new Search();
+            Password newSearch = new Password();
 
             PasswordControl newPasswordControl = new PasswordControl(newSearch);
             newPasswordControl.RemovePasswordClick += RemovePassword_Click;
@@ -160,21 +160,20 @@ namespace PasswordChecker
                 return;
             }
 
-            Queue<string> hashes = new Queue<string>();
+            List<Password> searches = new List<Password>();
             foreach(Control c in passwords.Children)
             {
                 if (c is PasswordControl)
                 {
                     PasswordControl pwc = (c as PasswordControl);
-                    if (!pwc.Search.IsLocked && pwc.Edited)
+                    if (!pwc.Password.IsLocked && pwc.Edited)
                     {
-                        string hash = PWC.Hash(pwc.Password);
-                        hashes.Enqueue(hash);
-                        pwc.Search.StartedSeeking(hash);
-                        PWC.CreateSearchInFile(hash, pwc.Search);
+                        pwc.Password.Hash = PWC.Hash(pwc.PasswordString);
+                        searches.Add(pwc.Password);
                     }
                 }
             }
+            PWC.CreateSearchesInFile(searches);
         }
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)

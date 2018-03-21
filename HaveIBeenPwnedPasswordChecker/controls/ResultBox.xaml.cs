@@ -23,7 +23,7 @@ namespace PasswordChecker.controls
 
         #region fields
 
-        private Search search;
+        private Password search;
 
         #endregion
 
@@ -53,7 +53,7 @@ namespace PasswordChecker.controls
 
         #region constructors
 
-        public ResultBox(Search search)
+        public ResultBox(Password search)
         {
             this.search = search;
             search.StateChanged += search_StateChanged;
@@ -111,11 +111,11 @@ namespace PasswordChecker.controls
 
         #region events
 
-        private void search_StateChanged(object sender, SearchStateEventArgs e)
+        private void search_StateChanged(object sender, PasswordStateEventArgs e)
         {
-            if (sender is Search)
+            if (sender is Password)
             {
-                Search search = (sender as Search);
+                Password search = (sender as Password);
                 switch (e.SearchState)
                 {
                     case SearchState.NotStarted:

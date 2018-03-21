@@ -21,11 +21,11 @@ namespace PasswordChecker
 
     #region event listener definitions
 
-    public class SearchStateEventArgs : EventArgs
+    public class PasswordStateEventArgs : EventArgs
     {
         private readonly SearchState searchState;
 
-        public SearchStateEventArgs(SearchState searchState)
+        public PasswordStateEventArgs(SearchState searchState)
         {
             this.searchState = searchState;
         }
@@ -38,11 +38,11 @@ namespace PasswordChecker
 
     #endregion
 
-    public class Search
+    public class Password
     {
         #region event listeners
 
-        public delegate void EventHandler(object sender, SearchStateEventArgs e);
+        public delegate void EventHandler(object sender, PasswordStateEventArgs e);
         public EventHandler StateChanged;
 
         #endregion
@@ -83,7 +83,7 @@ namespace PasswordChecker
             set
             {
                 state = value;
-                StateChanged?.Invoke(this, new SearchStateEventArgs(value));
+                StateChanged?.Invoke(this, new PasswordStateEventArgs(value));
             }
         }
 
@@ -91,12 +91,11 @@ namespace PasswordChecker
 
         #region constructors
 
-        public Search()
+        public Password()
         {
-
         }
 
-        public Search(string hash)
+        public Password(string hash)
         {
             this.Hash = hash;
         }
@@ -105,9 +104,8 @@ namespace PasswordChecker
 
         #region methods
 
-        public void StartedSeeking(string hash)
+        public void StartedSeeking()
         {
-            Hash = hash;
             State = SearchState.Seeking;
         }
 
