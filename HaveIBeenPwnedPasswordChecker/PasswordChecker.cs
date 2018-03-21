@@ -24,6 +24,7 @@ namespace PasswordChecker
         #region event listener definitions
 
         public delegate void EventHandler(object sender, EventArgs e);
+        public static EventHandler SearchStarted;
         public static EventHandler AllSearchesFinished;
 
         #endregion
@@ -38,7 +39,7 @@ namespace PasswordChecker
 
         #region properties
 
-        private static List<SearchThread> runningSearches = new List<SearchThread>();
+        private static List<Search> runningSearches = new List<Search>();
 
         public static string Filepath { get; set; }
 
@@ -74,14 +75,26 @@ namespace PasswordChecker
             }
         }
 
-        private static void RemoveSearch(SearchThread searchThread)
+        private static void AddSearch(Search search)
         {
             lock (threadLock)
             {
-                runningSearches.Remove(searchThread);
+                if (runningSearches.Count == 0)
+                {
+                    SearchStarted?.Invoke(search, new EventArgs());
+                }
+            }
+            runningSearches.Add(search);
+        }
+
+        private static void RemoveSearch(Search search)
+        {
+            runningSearches.Remove(search);
+            lock (threadLock)
+            {
                 if (runningSearches.Count < 1)
                 {
-                    AllSearchesFinished?.Invoke(searchThread, new EventArgs());
+                    AllSearchesFinished?.Invoke(search, new EventArgs());
                 }
             }
         }
@@ -98,11 +111,12 @@ namespace PasswordChecker
 
             CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ctsAllSearches.Token, localCts.Token);
             Task<int> seekHashTask = Task.Run(() => SeekHashInFile(search.Hash, linkedCts));
-            SearchThread searchThread = new SearchThread(seekHashTask, search);
-            runningSearches.Add(searchThread);
+
+            AddSearch(search);
+
             seekHashTask.ContinueWith((task) =>
             {
-                RemoveSearch(searchThread);
+                RemoveSearch(search);
                 if (task.Result < 0)
                 {
                     pwc.Search.Cancelled();

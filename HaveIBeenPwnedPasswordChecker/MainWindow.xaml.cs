@@ -32,7 +32,10 @@ namespace PasswordChecker
         public MainWindow()
         {
             PWC.AllSearchesFinished += this.AllSearchesFinished;
+            PWC.SearchStarted += this.SearchStarted;
+
             InitializeComponent();
+
             AddPassword();
         }
 
@@ -52,7 +55,6 @@ namespace PasswordChecker
             rbOrderByCount.IsEnabled = true;
             btFilepath.IsEnabled = true;
             btStop.IsEnabled = false;
-            btCheck.Content = "Check passwords";
         }
 
         public void SetFilepath()
@@ -86,7 +88,20 @@ namespace PasswordChecker
 
         public void AllSearchesFinished(object sender, EventArgs e)
         {
-            this.Dispatcher.Invoke(() => EnableSettingsControls());
+            this.Dispatcher.Invoke(() =>
+            {
+                EnableSettingsControls();
+                btCheck.Content = "Check passwords";
+            });
+        }
+
+        public void SearchStarted(object sender, EventArgs e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                DisableSettingsControls();
+                btCheck.Content = "Add passwords to check";
+            });
         }
 
         private void btAddPassword_Click(object sender, RoutedEventArgs e)
@@ -118,11 +133,6 @@ namespace PasswordChecker
             {
                 MessageBox.Show("No file selected. Please select a passwordhash database and indicate whether it is ordered by count or by hash.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
-            }
-            DisableSettingsControls();
-            if (sender is Button)
-            {
-                (sender as Button).Content = "Add passwords to check";
             }
 
             Queue<string> hashes = new Queue<string>();
