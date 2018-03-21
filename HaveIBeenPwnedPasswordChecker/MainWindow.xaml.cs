@@ -68,18 +68,21 @@ namespace PasswordChecker
             txt_filepath.Text = Filepath;
         }
 
-        public void AddPassword()
+        public PasswordControl AddPassword()
         {
             Search newSearch = new Search();
 
             PasswordControl newPasswordControl = new PasswordControl(newSearch);
             newPasswordControl.RemovePasswordClick += RemovePassword_Click;
+            newPasswordControl.EnterDown += pwc_EnterDown;
 
             ResultBox newResultBox = new ResultBox(newSearch);
             newPasswordControl.LinkedResultBox = newResultBox;
 
             passwords.Children.Insert(passwords.Children.Count - 1, newPasswordControl);
             results.Children.Insert(results.Children.Count - 1, newResultBox);
+
+            return newPasswordControl;
         }
 
         #endregion
@@ -102,6 +105,25 @@ namespace PasswordChecker
                 DisableSettingsControls();
                 btCheck.Content = "Add passwords to check";
             });
+        }
+
+        private void pwc_EnterDown(object sender, RoutedEventArgs e)
+        {
+            if (sender is PasswordControl)
+            {
+                PasswordControl pwc = (sender as PasswordControl);
+                
+                if (pwc == passwords.Children[passwords.Children.Count - 2])
+                {
+                    AddPassword().passwordbox.Focus();
+                }
+                else
+                {
+                    int index = passwords.Children.IndexOf(pwc);
+                    PasswordControl pwcNewFocus = passwords.Children[index + 1] as PasswordControl;
+                    pwcNewFocus.passwordbox.Focus();
+                }
+            }
         }
 
         private void btAddPassword_Click(object sender, RoutedEventArgs e)
@@ -183,16 +205,5 @@ namespace PasswordChecker
         }
 
         #endregion
-
-        private void cbHidePasswords_Checked(object sender, RoutedEventArgs e)
-        {
-            foreach (Control c in passwords.Children)
-            {
-                if (c is PasswordControl)
-                {
-                    PasswordControl pwc = (c as PasswordControl);
-                }
-            }
-        }
     }
 }

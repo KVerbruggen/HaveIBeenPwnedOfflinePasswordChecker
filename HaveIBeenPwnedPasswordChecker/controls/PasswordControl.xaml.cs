@@ -21,8 +21,12 @@ namespace PasswordChecker.controls
     public partial class PasswordControl : UserControl
     {
         #region event handlers
+
         public delegate void ButtonClickHandler(object sender, RoutedEventArgs e);
         public event ButtonClickHandler RemovePasswordClick;
+
+        public delegate void KeyDownHandler(object sender, KeyEventArgs e);
+        public event KeyDownHandler EnterDown;
 
         #endregion
 
@@ -77,6 +81,14 @@ namespace PasswordChecker.controls
                     Edited = false;
                 }
                 this.Dispatcher.Invoke(() => this.IsEnabled = (e.SearchState != SearchState.Seeking));
+            }
+        }
+
+        private void passwordbox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                this.EnterDown?.Invoke(this, e);
             }
         }
 

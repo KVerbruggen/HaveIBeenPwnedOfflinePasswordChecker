@@ -110,6 +110,7 @@ namespace PasswordChecker
             CancellationTokenSource localCts = new CancellationTokenSource();
 
             CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ctsAllSearches.Token, localCts.Token);
+
             Task<int> seekHashTask = Task.Run(() => SeekHashInFile(search.Hash, linkedCts));
 
             AddSearch(search);
