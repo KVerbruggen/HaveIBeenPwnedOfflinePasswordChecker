@@ -22,12 +22,14 @@ namespace PasswordChecker
     /// </summary>
     public partial class MainWindow : Window
     {
+        private string filepath = String.Empty;
+
+        private SearchType searchType = SearchType.OrderedByCount;
 
         private string Filepath {
-            get { return String.IsNullOrEmpty(PWC.Filepath) ? "[None]" : PWC.Filepath; }
-            set { PWC.Filepath = value; }
+            get { return String.IsNullOrEmpty(filepath) ? "[None]" : filepath; }
+            set { filepath = value; }
         }
-
 
         public MainWindow()
         {
@@ -64,8 +66,8 @@ namespace PasswordChecker
             if (openFileDialog.ShowDialog() == true)
             {
                 Filepath = openFileDialog.FileName;
+                txt_filepath.Text = Filepath;
             }
-            txt_filepath.Text = Filepath;
         }
 
         public PasswordControl AddPassword()
@@ -154,7 +156,7 @@ namespace PasswordChecker
 
         private void btCheck_Click(object sender, RoutedEventArgs e)
         {
-            if (String.IsNullOrEmpty(PWC.Filepath))
+            if (String.IsNullOrEmpty(filepath))
             {
                 MessageBox.Show("No file selected. Please select a passwordhash database and indicate whether it is ordered by count or by hash.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -173,7 +175,7 @@ namespace PasswordChecker
                     }
                 }
             }
-            PWC.CreateSearchesInFile(searches);
+            PWC.CreateSearchesInFile(filepath, searches, searchType);
         }
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -193,12 +195,12 @@ namespace PasswordChecker
 
         private void setSearchType_OrderByHash(object sender, RoutedEventArgs e)
         {
-            PWC.SearchType = SearchType.OrderedByHash;
+            searchType = SearchType.OrderedByHash;
         }
 
         private void setSearchType_OrderByCount(object sender, RoutedEventArgs e)
         {
-            PWC.SearchType = SearchType.OrderedByCount;
+            searchType = SearchType.OrderedByCount;
         }
 
         private void btStop_Click(object sender, RoutedEventArgs e)
