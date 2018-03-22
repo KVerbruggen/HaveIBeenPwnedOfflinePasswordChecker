@@ -70,13 +70,13 @@ namespace PasswordChecker
 
         public PasswordControl AddPassword()
         {
-            Password newSearch = new Password();
+            Password newPassword = new Password();
 
-            PasswordControl newPasswordControl = new PasswordControl(newSearch);
+            PasswordControl newPasswordControl = new PasswordControl(newPassword);
             newPasswordControl.RemovePasswordClick += RemovePassword_Click;
             newPasswordControl.EnterDown += pwc_EnterDown;
 
-            ResultBox newResultBox = new ResultBox(newSearch);
+            ResultBox newResultBox = new ResultBox(newPassword);
             newPasswordControl.LinkedResultBox = newResultBox;
 
             passwords.Children.Insert(passwords.Children.Count - 1, newPasswordControl);

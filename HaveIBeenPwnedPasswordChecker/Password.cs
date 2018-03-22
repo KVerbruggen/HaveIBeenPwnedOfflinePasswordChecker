@@ -104,6 +104,15 @@ namespace PasswordChecker
 
         #region methods
 
+        public void Reset()
+        {
+            if (!IsLocked)
+            {
+                this.Hash = String.Empty;
+                this.State = SearchState.NotStarted;
+            }
+        }
+
         public void StartedSeeking()
         {
             State = SearchState.Seeking;
@@ -123,4 +132,5 @@ namespace PasswordChecker
         #endregion
 
     }
+
 }

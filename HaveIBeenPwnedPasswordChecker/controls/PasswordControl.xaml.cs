@@ -52,7 +52,7 @@ namespace PasswordChecker.controls
         public PasswordControl(Password password)
         {
             Password = password;
-            password.StateChanged += password_StateChanged;
+            Password.StateChanged += password_StateChanged;
 
             InitializeComponent();
         }
@@ -68,6 +68,7 @@ namespace PasswordChecker.controls
 
         private void passwordbox_PasswordChanged(object sender, RoutedEventArgs e)
         {
+            Password.Reset();
             Edited = true;
         }
 

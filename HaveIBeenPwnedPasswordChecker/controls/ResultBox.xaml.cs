@@ -101,8 +101,9 @@ namespace PasswordChecker.controls
             animLoading.Visibility = Visibility.Hidden;
         }
 
-        private void ResetCount()
+        private void Reset()
         {
+            txtResult.Content = String.Empty;
             txtCount.Foreground = new SolidColorBrush(Colors.Black);
             txtCount.Visibility = Visibility.Hidden;
         }
@@ -119,7 +120,7 @@ namespace PasswordChecker.controls
                 switch (e.SearchState)
                 {
                     case SearchState.NotStarted:
-                        this.Dispatcher.Invoke(() => ResetCount());
+                        this.Dispatcher.Invoke(() => Reset());
                         break;
                     case SearchState.Seeking:
                         this.Dispatcher.Invoke(() => SearchStarted());
